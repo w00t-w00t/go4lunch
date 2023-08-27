@@ -29,7 +29,7 @@ public class RetrofitTest {
     /** Maps API endpoint */
     private static final String MAPS_ENDPOINT = "https://maps.googleapis.com/maps/api/place/";
     /** Maps API key */
-    private static final String MAPS_API_KEY = "API_KEY_HERE !!!";
+    private static final String MAPS_API_KEY = "AIzaSyAHef107HfTGlINM13wFka5cKerMz4u9SY";
     /** Maps API restaurant type */
     private static final String MAPS_RESTAURANT_TYPE = "restaurant";
 
