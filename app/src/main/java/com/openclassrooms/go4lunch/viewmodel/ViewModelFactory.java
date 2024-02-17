@@ -52,7 +52,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(ListRestoViewModel.class)) {
             return (T) new ListRestoViewModel(context);
         }
-        if(modelClass.isAssignableFrom(TestGeoMainViewModel.class)) {
+        if(modelClass.isAssignableFrom(TestMainViewModel.class)) {
             Application application = MainApplication.getApplication();
             Log.d("ViewModelFactory", "create: " + application);
             LocationRepository loc = new LocationRepository(
@@ -61,7 +61,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                     )
             );
 
-            return (T) new TestGeoMainViewModel(loc);
+            return (T) new TestMainViewModel(loc);
         }
         throw new IllegalArgumentException("Unknown ViewModel class");
     }

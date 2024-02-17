@@ -15,19 +15,28 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.openclassrooms.go4lunch.MainApplication;
+import com.openclassrooms.go4lunch.model.bo.Lunch;
+import com.openclassrooms.go4lunch.model.bo.Restaurant;
+import com.openclassrooms.go4lunch.model.bo.Workmate;
 import com.openclassrooms.go4lunch.model.bo.location.GPSStatus;
 import com.openclassrooms.go4lunch.model.repository.LocationRepository;
+import com.openclassrooms.go4lunch.model.repository.LunchRepository;
 
 /**
  * ViewModel that includes GPS LiveData
  */
-public class TestGeoMainViewModel extends ViewModel {
+public class TestMainViewModel extends ViewModel {
 
     /**
      * LocationRepository
      */
     @NonNull
     private final LocationRepository locationRepository;
+
+    /**
+     * LunchRepository
+     */
+    private final LunchRepository lunchRepository = LunchRepository.getInstance();
 
     /**
      * LiveData that indicates if the app has GPS permission
@@ -52,7 +61,7 @@ public class TestGeoMainViewModel extends ViewModel {
      * Constructor
      * @param locationRepository LocationRepository instance to get GPS location
      */
-    public TestGeoMainViewModel(@NonNull LocationRepository locationRepository) {
+    public TestMainViewModel(@NonNull LocationRepository locationRepository) {
         this.locationRepository = locationRepository;
 
         // get the Location LiveData from the LocationRepository
@@ -114,6 +123,13 @@ public class TestGeoMainViewModel extends ViewModel {
         } else {
             gpsMessageLiveData.setValue(new GPSStatus(location.getLongitude(),location.getLatitude()));
         }
+    }
+
+    /**
+     * Allow lunch insert
+     */
+    public void insert(String dateLunch, Restaurant restaurantChoosed, Workmate workmate){
+        lunchRepository.createLunch(dateLunch, restaurantChoosed, workmate);
     }
 
 }

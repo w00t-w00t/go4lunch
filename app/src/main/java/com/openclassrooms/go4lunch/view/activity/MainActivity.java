@@ -16,10 +16,15 @@ import com.openclassrooms.go4lunch.BuildConfig;
 import com.openclassrooms.go4lunch.databinding.ActivityMainBinding;
 
 import com.openclassrooms.go4lunch.R;
+import com.openclassrooms.go4lunch.model.bo.Restaurant;
+import com.openclassrooms.go4lunch.model.bo.Workmate;
 import com.openclassrooms.go4lunch.model.bo.maps.ListRestaurant;
 import com.openclassrooms.go4lunch.model.repository.RestaurantRepository;
-import com.openclassrooms.go4lunch.viewmodel.TestGeoMainViewModel;
+import com.openclassrooms.go4lunch.viewmodel.TestMainViewModel;
 import com.openclassrooms.go4lunch.viewmodel.ViewModelFactory;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -60,13 +65,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /** Request GPS position as LiveData (must be inside a ViewModel) **/
-    private TestGeoMainViewModel viewModel;
+    private TestMainViewModel viewModel;
 
     /** Test GPS **/
     private void testGPS(){
-
-        // iniatialize ViewModel that includes GPS LiveData
-        viewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(TestGeoMainViewModel.class);
 
         // Request GPS position appropriate permissions
         ActivityCompat.requestPermissions(
@@ -80,6 +82,18 @@ public class MainActivity extends AppCompatActivity {
             Log.d("testGPS", message.toString());
             binding.textView.setText(message.toString());
         });
+    }
+
+    /** Test Firebase Insert **/
+    private void testFireStoreInsert(){
+
+        Instant toDay = Instant.now().truncatedTo(ChronoUnit.DAYS);
+
+        Restaurant restaurant = new Restaurant("id", "monResto", "monPhone",  14.4f, "type", "url", "monWebsite", "monAddress","10:30");
+        Workmate workmate = new Workmate("monNom", "monEmail", "monPhoto", "monId");
+
+        viewModel.insert(toDay.toString(), restaurant, workmate);
+
     }
 
     /** Lifecycle **/
@@ -96,6 +110,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // iniatialize ViewModel that includes GPS LiveData
+        viewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(TestMainViewModel.class);
+
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -108,6 +125,9 @@ public class MainActivity extends AppCompatActivity {
                 // Test Google Maps API
                 // https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=48.1159843,-1.7296427&radius=1000&type=restaurant&key=YOUR_API_KEY
                 testGoogleMapsAPI();
+
+                // Test FireStore
+                testFireStoreInsert();
 
                 // Check if GPS is enabled
                 testGPS();
