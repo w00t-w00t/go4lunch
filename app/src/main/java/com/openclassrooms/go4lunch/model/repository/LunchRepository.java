@@ -47,6 +47,16 @@ public class LunchRepository {
     private static final String LUNCH_RESTAURANT_CHOSEN_NAME_FIELD = "restaurantChoosed.name";
 
     /**
+     * Get the list of workmates who have already chosen a restaurant for today's lunch as LiveData
+     */
+    private final MutableLiveData<ArrayList<Workmate>> workmatesAlreadyChooseRestaurantForTodayLunch = new MutableLiveData<>();
+
+    /**
+     * Check if the current workmates has chosen a particular Restaurant for today
+     */
+    private final MutableLiveData<Boolean> thatRestaurantIsChosenForToday = new MutableLiveData<>();
+
+    /**
      * Empty constructor
      */
     public LunchRepository() {
@@ -71,16 +81,6 @@ public class LunchRepository {
     public static CollectionReference getLunchCollection() {
         return FirebaseFirestore.getInstance().collection(COLLECTION_NAME);
     }
-
-    /**
-     * Get the list of workmates who have already chosen a restaurant for today's lunch as LiveData
-     */
-    private final MutableLiveData<ArrayList<Workmate>> workmatesAlreadyChooseRestaurantForTodayLunch = new MutableLiveData<>();
-
-    /**
-     * Check if the current workmates has chosen a particular Restaurant for today
-     */
-    private final MutableLiveData<Boolean> thatRestaurantIsChosenForToday = new MutableLiveData<>();
 
     /** Today */
     private static String toDay(){
