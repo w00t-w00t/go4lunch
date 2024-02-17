@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     /** Request GPS position as LiveData (must be inside a ViewModel) **/
     private TestGeoMainViewModel viewModel;
 
+    /** Test GPS **/
     private void testGPS(){
 
         // iniatialize ViewModel that includes GPS LiveData
@@ -81,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /** Lifecycle **/
     @Override
     public void onResume() {
         super.onResume();
@@ -89,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
             viewModel.refresh();
     }
 
+    /** OnCreate **/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -111,8 +114,8 @@ public class MainActivity extends AppCompatActivity {
 
                 // Display a message
                 Snackbar.make(view, "Clicked!", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
+                    .setAnchorView(R.id.fab)
+                    .setAction("Action", null).show();
             }
         });
     }
