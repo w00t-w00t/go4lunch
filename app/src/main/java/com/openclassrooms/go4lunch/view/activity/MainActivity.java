@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 import android.util.Log;
 import android.view.View;
 
+import com.openclassrooms.go4lunch.BuildConfig;
 import com.openclassrooms.go4lunch.databinding.ActivityMainBinding;
 
 import com.openclassrooms.go4lunch.R;
@@ -34,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private void testGoogleMapsAPI(){
 
         String BASE_URL = "https://maps.googleapis.com/maps/api/place/";
-        String API_KEY = getString(R.string.google_maps_key);
+        String API_KEY = BuildConfig.google_maps_api;
         String CATEGORY = "restaurant";
         final int RADIUS = 1000;
         String GOOGLE_PLEX = "48.1159843,-1.7296427";
