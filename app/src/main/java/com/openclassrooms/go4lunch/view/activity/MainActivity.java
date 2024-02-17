@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
         String BASE_URL = "https://maps.googleapis.com/maps/api/place/";
         String API_KEY = getString(R.string.google_maps_key);
         String CATEGORY = "restaurant";
-        int RADIUS = 1000;
+        final int RADIUS = 1000;
         String GOOGLE_PLEX = "48.1159843,-1.7296427";
 
         Log.d("testGoogleMapsAPI", "Starting request with API KEY = " + API_KEY);
@@ -63,17 +63,20 @@ public class MainActivity extends AppCompatActivity {
 
     private void testGPS(View view){
 
+        // iniatialize ViewModel that includes GPS LiveData
         viewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(TestGeoMainViewModel.class);
 
+        // Request GPS position appropriate permissions
         ActivityCompat.requestPermissions(
                 this,
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
                 0
         );
 
-        viewModel.getGpsMessageLiveData().observe(this, message -> {
-            Log.d("testGPS", message);
-            binding.textView.setText(message);
+        // Observe GPS position
+        viewModel.getGPSStatus().observe(this, message -> {
+            Log.d("testGPS", message.toString());
+            binding.textView.setText(message.toString());
         });
     }
 
