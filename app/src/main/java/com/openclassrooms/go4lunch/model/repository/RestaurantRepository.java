@@ -37,7 +37,7 @@ public class RestaurantRepository {
      * @param key the API key of the Google Maps API
      * @return the asynchronous initiated call of the list of restaurants
      */
-    public  Call<ListRestaurant> getAllRestaurant(String url, String location, int radius, String type, String key) {
+    public Call<ListRestaurant> getAllRestaurant(String url, String location, int radius, String type, String key) {
 
         // Build retrofit HTTP client
         Retrofit retrofit=new Retrofit.Builder()
