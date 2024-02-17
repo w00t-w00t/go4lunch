@@ -87,12 +87,10 @@ public class MainActivity extends AppCompatActivity {
     /** Test Firebase Insert **/
     private void testFireStoreInsert(){
 
-        Instant toDay = Instant.now().truncatedTo(ChronoUnit.DAYS);
-
         Restaurant restaurant = new Restaurant("id", "monResto", "monPhone",  14.4f, "type", "url", "monWebsite", "monAddress","10:30");
         Workmate workmate = new Workmate("monNom", "monEmail", "monPhoto", "monId");
 
-        viewModel.insert(toDay.toString(), restaurant, workmate);
+        viewModel.insert(restaurant, workmate);
 
     }
 

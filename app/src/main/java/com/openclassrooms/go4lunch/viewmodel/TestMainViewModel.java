@@ -128,8 +128,8 @@ public class TestMainViewModel extends ViewModel {
     /**
      * Allow lunch insert
      */
-    public void insert(String dateLunch, Restaurant restaurantChoosed, Workmate workmate){
-        lunchRepository.createLunch(dateLunch, restaurantChoosed, workmate);
+    public void insert(Restaurant restaurantChoosed, Workmate workmate){
+        lunchRepository.createLunch(restaurantChoosed, workmate);
     }
 
 }

@@ -2,6 +2,7 @@ package com.openclassrooms.go4lunch.model.repository;
 
 import android.util.Log;
 
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.google.android.gms.tasks.Task;
@@ -13,152 +14,176 @@ import com.openclassrooms.go4lunch.model.bo.Lunch;
 import com.openclassrooms.go4lunch.model.bo.Restaurant;
 import com.openclassrooms.go4lunch.model.bo.Workmate;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 
+/**
+ * LunchRepository is a Singleton class that provides methods to interact with the Lunch collection in Firestore
+ */
 public class LunchRepository {
+
+    /**
+     * The tag for the log messages
+     */
+    private static final String TAG = LunchRepository.class.getSimpleName();
+
+    /**
+     * The name of the collection in Firestore
+     */
     private static final String COLLECTION_NAME = "lunch";
-    private static final String LUNCH_WORKMATE_ID_FIELD ="workmates.idWorkmate";
-    private static final String LUNCH_DATE_LUNCH_FIELD="dateLunch";
-    private static final String LUNCH_RESTAURANT_CHOOSED_NAME_FIELD="restaurantChoosed.name";
 
-    private static volatile LunchRepository instance;
-    private final MutableLiveData<ArrayList<Workmate>> workmatesAlreadyChooseRestaurantForTodayLunch= new MutableLiveData<>();
-    private final MutableLiveData<Boolean> todayLunchIschoosed=new MutableLiveData<>();
+    /**
+     * The path from the Lunch to the workmate id
+     */
+    private static final String LUNCH_WORKMATE_ID_FIELD = "workmates.idWorkmate";
+    /**
+     * The name of the field date lunch
+     */
+    private static final String LUNCH_DATE_LUNCH_FIELD = "dateLunch";
+    /**
+     * The name of the field in the document restaurantChosen
+     */
+    private static final String LUNCH_RESTAURANT_CHOSEN_NAME_FIELD = "restaurantChoosed.name";
 
+    /**
+     * Empty constructor
+     */
     public LunchRepository() {
+        super();
     }
 
+    /**
+     * Repository singleton
+     */
+    private static volatile LunchRepository instance;
+
     public static LunchRepository getInstance() {
-        if(instance==null)
-        {
-            instance=new LunchRepository();
+        if (instance == null) {
+            instance = new LunchRepository();
         }
         return instance;
     }
-    // Get the Collection Reference
-    public static CollectionReference getLunchCollection(){
+
+    /**
+     * Get the Lunch collection
+     */
+    public static CollectionReference getLunchCollection() {
         return FirebaseFirestore.getInstance().collection(COLLECTION_NAME);
     }
 
-    public void createLunch(String dateLunch, Restaurant restaurantChoosed, Workmate workmate) {
-        // Create the Lunch object
-        Lunch lunch = new Lunch(dateLunch, restaurantChoosed, workmate);
-        // Store Lunch to Firestore
+    /**
+     * Get the list of workmates who have already chosen a restaurant for today's lunch as LiveData
+     */
+    private final MutableLiveData<ArrayList<Workmate>> workmatesAlreadyChooseRestaurantForTodayLunch = new MutableLiveData<>();
+
+    /**
+     * Check if the current workmates has chosen a particular Restaurant for today
+     */
+    private final MutableLiveData<Boolean> thatRestaurantIsChosenForToday = new MutableLiveData<>();
+
+    /** Today */
+    private static String toDay(){
+        return Instant.now().truncatedTo(ChronoUnit.DAYS).toString();
+    }
+
+    /** Create a lunch */
+    public void createLunch(Restaurant restaurantChoosed, Workmate workmate) {
+        Lunch lunch = new Lunch(toDay(), restaurantChoosed, workmate);
         getLunchCollection().add(lunch);
     }
 
-    public MutableLiveData<Lunch> getTodayLunch(String idw) {
+    /** Get THE today lunch for a given workmate, if it exists. As Task (for ALARM purpose) */
+    public static Task<QuerySnapshot> getTodayLunchByWorkmateTask(String id_workmate) {
+        return getLunchCollection()
+                .whereEqualTo(LUNCH_WORKMATE_ID_FIELD, id_workmate)
+                .whereEqualTo(LUNCH_DATE_LUNCH_FIELD, toDay())
+                .get();
+    }
+
+    /** Get ALL the today lunch for a given restaurant, if it exists. As Task.  */
+    public static Task<QuerySnapshot> getTodayLunchByRestaurantTask(Restaurant restaurant) {
+        return getLunchCollection()
+                .whereEqualTo(LUNCH_RESTAURANT_CHOSEN_NAME_FIELD, restaurant.getName())
+                .whereEqualTo(LUNCH_DATE_LUNCH_FIELD, toDay())
+                .get();
+    }
+
+    /** Check if the current workmate has chosen a particular Restaurant for today. As Task */
+    public static Task<QuerySnapshot> getTodayLunchByRestaurantAndWorkmate(Restaurant restaurant, String user_id) {
+        return getLunchCollection()
+                .whereEqualTo(LUNCH_RESTAURANT_CHOSEN_NAME_FIELD, restaurant.getName())
+                .whereEqualTo(LUNCH_WORKMATE_ID_FIELD, user_id)
+                .get();
+    }
+
+    /** Get the today lunch for a given workmate, if it exists. As LiveData */
+    public LiveData<Lunch> getTodayLunch(String id_workmate) {
         MutableLiveData<Lunch> todayLunch = new MutableLiveData<>();
-        Date today= Calendar.getInstance().getTime();
-        today.setHours(13);
-        today.setMinutes(0);
-        today.setSeconds(0);
-        getLunchCollection()
-              .whereEqualTo(LUNCH_WORKMATE_ID_FIELD,idw)
-              .whereEqualTo(LUNCH_DATE_LUNCH_FIELD, today.toString())
-        .get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                QuerySnapshot querySnapshot = task.getResult();
-                if(task.getResult().size()!=0) {
-                    Log.e("TAG_GET_TODAY_LUNCH", "getTodayLunch: "+ idw+" booked for Lunch this restaurant "+querySnapshot.toObjects(Lunch.class).get(0).getChosenRestaurant().getName());
-                    todayLunch.postValue(querySnapshot.toObjects(Lunch.class).get(0));
+        getTodayLunchByWorkmateTask(id_workmate)
+            .addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    QuerySnapshot querySnapshot = task.getResult();
+                    if (task.getResult().size() != 0) {
+                        Log.e(TAG, "getTodayLunch: " + id_workmate + " booked for Lunch this restaurant " + querySnapshot.toObjects(Lunch.class).get(0).getChosenRestaurant().getName());
+                        todayLunch.postValue(querySnapshot.toObjects(Lunch.class).get(0));
+                    } else {
+                        Log.e(TAG, "getTodayLunch: " + id_workmate + " hasn't book a restaurant for today lunch !");
+                    }
+                } else {
+                    Log.e(TAG, "Error getting documents: ", task.getException());
                 }
-                else{  Log.e("TAG_GET_TODAY_LUNCH", "getTodayLunch: "+ idw+" hasn't book a restaurant for today lunch !");
-                }
-            } else {
-                Log.e("Error", "Error getting documents: ", task.getException());
-            }
-        });
+            });
         return todayLunch;
     }
-    public static Task<QuerySnapshot> getTodayLunch2(String idw) {
-        Date today= Calendar.getInstance().getTime();
-        today.setHours(13);
-        today.setMinutes(0);
-        today.setSeconds(0);
-       return  getLunchCollection()
-                .whereEqualTo(LUNCH_WORKMATE_ID_FIELD,idw)
-                .whereEqualTo(LUNCH_DATE_LUNCH_FIELD, today.toString())
-                .get();
 
-    }
-    public static Task<QuerySnapshot> getTodayLunchByRestaurant(Restaurant restaurant){
-        Date today= Calendar.getInstance().getTime();
-        today.setHours(13);
-        today.setMinutes(0);
-        today.setSeconds(0);
-       return getLunchCollection().whereEqualTo(LUNCH_RESTAURANT_CHOOSED_NAME_FIELD,restaurant.getName())
-              .whereEqualTo(LUNCH_DATE_LUNCH_FIELD,today.toString())
-                .get();
-    }
-
-    public MutableLiveData<ArrayList<Workmate>> getWorkmatesThatAlreadyChooseRestaurantForTodayLunch(Restaurant restaurant){
-       Date today= Calendar.getInstance().getTime();
-        today.setHours(13);
-        today.setMinutes(0);
-        today.setSeconds(0);
-        getLunchCollection()
-                .whereEqualTo(LUNCH_RESTAURANT_CHOOSED_NAME_FIELD,restaurant.getName())
-               .whereEqualTo(LUNCH_DATE_LUNCH_FIELD,today.toString())
-                .get()
-                .addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                ArrayList<Workmate> workmates = new ArrayList<>();
-                for (QueryDocumentSnapshot document : task.getResult()) {
-                    workmates.add(document.toObject(Lunch.class).getWorkmate());
-                    Log.e("Error", "documents "+document.toObject(Lunch.class).getWorkmate());
+    /** Get ALL the today lunch for a given restaurant, if it exists */
+    public LiveData<ArrayList<Workmate>> getWorkmatesThatAlreadyChooseRestaurantForTodayLunchForThatRestaurant(Restaurant restaurant) {
+        getTodayLunchByRestaurantTask(restaurant)
+            .addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    ArrayList<Workmate> workmates = new ArrayList<>();
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        workmates.add(document.toObject(Lunch.class).getWorkmate());
+                        Log.e(TAG, "documents " + document.toObject(Lunch.class).getWorkmate());
+                    }
+                    workmatesAlreadyChooseRestaurantForTodayLunch.setValue(workmates);
+                } else {
+                    Log.e(TAG, "Error getting documents: ", task.getException());
                 }
-
-                workmatesAlreadyChooseRestaurantForTodayLunch.setValue(workmates);
-            } else {
-                Log.e("Error", "Error getting documents: ", task.getException());
-            }
-        })
-        .addOnFailureListener(e -> workmatesAlreadyChooseRestaurantForTodayLunch.postValue(null));
+            })
+            .addOnFailureListener(e -> workmatesAlreadyChooseRestaurantForTodayLunch.postValue(null));
         return workmatesAlreadyChooseRestaurantForTodayLunch;
     }
-    public MutableLiveData<Boolean> checkIfCurrentWorkmateChoseThisRestaurantForLunch(Restaurant restaurant,String uid) {
-        getLunchCollection()
-                .whereEqualTo(LUNCH_RESTAURANT_CHOOSED_NAME_FIELD, restaurant.getName())
-              .whereEqualTo(LUNCH_WORKMATE_ID_FIELD,uid)
-                .get()
-                .addOnCompleteListener(task -> {
-                            if (task.isSuccessful()) {
-                                todayLunchIschoosed.postValue(false);
-                                if (task.getResult().size() > 0) {
-                                    todayLunchIschoosed.postValue(true);
-                                }
 
-                            }
+    /** Check if the current workmates has chosen a particular Restaurant for today */
+    public MutableLiveData<Boolean> checkIfCurrentWorkmateChoseThisRestaurantForLunch(Restaurant restaurant, String user_id) {
+        getTodayLunchByRestaurantAndWorkmate(restaurant, user_id)
+            .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        thatRestaurantIsChosenForToday.postValue(false);
+                        if (task.getResult().size() > 0) {
+                            thatRestaurantIsChosenForToday.postValue(true);
                         }
-                );
-        return todayLunchIschoosed;
-    }
-    public static Task<QuerySnapshot> checkIfCurrentWorkmateChoseThisRestaurantForLunch2(Restaurant restaurant, String uid) {
-        return getLunchCollection()
-                .whereEqualTo(LUNCH_RESTAURANT_CHOOSED_NAME_FIELD, restaurant.getName())
-                .whereEqualTo(LUNCH_WORKMATE_ID_FIELD,uid)
-                .get();
+
+                    }
+                }
+            );
+        return thatRestaurantIsChosenForToday;
     }
 
-
-    public void deleteLunch(Restaurant restaurant, String currentUid) {
-        getLunchCollection()
-                .whereEqualTo(LUNCH_RESTAURANT_CHOOSED_NAME_FIELD, restaurant.getName())
-                .whereEqualTo(LUNCH_WORKMATE_ID_FIELD,currentUid)
-                .get()
-                .addOnCompleteListener(task -> {
-                    if(task.isSuccessful()){
-                        for (QueryDocumentSnapshot document : task.getResult()) {
-                            document.getReference().delete();
-                            Log.e("delete ", "lunch: "+ document.toObject(Lunch.class).getChosenRestaurant().getName());
-                        }
+    /** Delete a lunch, by specifying the restaurant and the user_id */
+    public void deleteLunch(Restaurant restaurant, String user_id) {
+        getTodayLunchByRestaurantAndWorkmate(restaurant, user_id)
+            .addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        document.getReference().delete();
+                        Log.e(TAG, "lunch: " + document.toObject(Lunch.class).getChosenRestaurant().getName());
                     }
-                    else {
-                        Log.e("Error", "Error delete documents: ", task.getException());
-                    }
-                });
+                } else {
+                    Log.e(TAG, "Error delete documents: ", task.getException());
+                }
+            });
     }
 }
