@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     /** Request GPS position as LiveData (must be inside a ViewModel) **/
     private TestGeoMainViewModel viewModel;
 
-    private void testGPS(View view){
+    private void testGPS(){
 
         // iniatialize ViewModel that includes GPS LiveData
         viewModel = new ViewModelProvider(this, ViewModelFactory.getInstance()).get(TestGeoMainViewModel.class);
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
                 testGoogleMapsAPI();
 
                 // Check if GPS is enabled
-                testGPS(view);
+                testGPS();
 
                 // Display a message
                 Snackbar.make(view, "Clicked!", Snackbar.LENGTH_LONG)
